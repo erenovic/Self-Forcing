@@ -10,6 +10,8 @@ from wan.modules.vae import _video_vae
 from wan.modules.t5 import umt5_xxl
 from wan.modules.causal_model import CausalWanModel
 
+MODEL_DIR = "/cluster/scratch/ecetin/MemoryKrea/.cache/huggingface/hub/models--Wan-AI--Wan2.1-T2V-1.3B/snapshots/37ec512624d61f7aa208f7ea8140a131f93afc9a"
+MODEL_DIR_14B = "/cluster/scratch/ecetin/MemoryKrea/.cache/huggingface/hub/models--Wan-AI--Wan2.1-T2V-14B/snapshots/a064a6c71f5be440641209c07bf2a5ce7a2ff5e4"
 
 class WanTextEncoder(torch.nn.Module):
     def __init__(self) -> None:
@@ -22,12 +24,11 @@ class WanTextEncoder(torch.nn.Module):
             device=torch.device('cpu')
         ).eval().requires_grad_(False)
         self.text_encoder.load_state_dict(
-            torch.load("wan_models/Wan2.1-T2V-1.3B/models_t5_umt5-xxl-enc-bf16.pth",
-                       map_location='cpu', weights_only=False)
+            torch.load(f"{MODEL_DIR}/models_t5_umt5-xxl-enc-bf16.pth", map_location='cpu', weights_only=False)
         )
 
         self.tokenizer = HuggingfaceTokenizer(
-            name="wan_models/Wan2.1-T2V-1.3B/google/umt5-xxl/", seq_len=512, clean='whitespace')
+            name=f"{MODEL_DIR}/google/umt5-xxl/", seq_len=512, clean='whitespace')
 
     @property
     def device(self):
@@ -66,7 +67,7 @@ class WanVAEWrapper(torch.nn.Module):
 
         # init model
         self.model = _video_vae(
-            pretrained_path="wan_models/Wan2.1-T2V-1.3B/Wan2.1_VAE.pth",
+            pretrained_path=f"{MODEL_DIR}/Wan2.1_VAE.pth",
             z_dim=16,
         ).eval().requires_grad_(False)
 
@@ -123,11 +124,16 @@ class WanDiffusionWrapper(torch.nn.Module):
     ):
         super().__init__()
 
+        if model_name == "Wan2.1-T2V-1.3B":
+            model_dir = MODEL_DIR
+        else:
+            model_dir = MODEL_DIR_14B
+
         if is_causal:
             self.model = CausalWanModel.from_pretrained(
-                f"wan_models/{model_name}/", local_attn_size=local_attn_size, sink_size=sink_size)
+                f"{model_dir}/", local_attn_size=local_attn_size, sink_size=sink_size)
         else:
-            self.model = WanModel.from_pretrained(f"wan_models/{model_name}/")
+            self.model = WanModel.from_pretrained(f"{model_dir}/")
         self.model.eval()
 
         # For non-causal diffusion, all frames share the same timestep

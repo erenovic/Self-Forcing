@@ -7,16 +7,25 @@ import json
 from pathlib import Path
 from PIL import Image
 import os
+import gzip
 
 
 class TextDataset(Dataset):
     def __init__(self, prompt_path, extended_prompt_path=None):
-        with open(prompt_path, encoding="utf-8") as f:
-            self.prompt_list = [line.rstrip() for line in f]
+        if prompt_path.endswith(".gz"):
+            with gzip.open(prompt_path, "rt", encoding="utf-8") as f:
+                self.prompt_list = [line.rstrip() for line in f]
+        else:
+            with open(prompt_path, encoding="utf-8") as f:
+                self.prompt_list = [line.rstrip() for line in f]
 
         if extended_prompt_path is not None:
-            with open(extended_prompt_path, encoding="utf-8") as f:
-                self.extended_prompt_list = [line.rstrip() for line in f]
+            if extended_prompt_path.endswith(".gz"):
+                with gzip.open(extended_prompt_path, "rt", encoding="utf-8") as f:
+                    self.extended_prompt_list = [line.rstrip() for line in f]
+            else:
+                with open(extended_prompt_path, encoding="utf-8") as f:
+                    self.extended_prompt_list = [line.rstrip() for line in f]
             assert len(self.extended_prompt_list) == len(self.prompt_list)
         else:
             self.extended_prompt_list = None

@@ -29,7 +29,7 @@ beta2: 0.999
 beta1_critic: 0.0
 beta2_critic: 0.999
 weight_decay: 0.0
-data_path: prompts/vidprom_filtered_extended.txt
+data_path: prompts/vidprom_filtered_extended.txt.gz
 batch_size: 1
 sid_alpha: 1.0
 ema_weight: 0.99
