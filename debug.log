@@ -1,0 +1,1276 @@
+
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************
+
+================================================================================
+[DISTILLATION TRAINER INIT] rank=0, world_size=4
+[CONFIG] trainer=score_distillation, distribution_loss=dmd
+[CONFIG] mixed_precision=True, seed=0
+[CONFIG] batch_size=1, lr=2e-06, lr_critic=4e-07
+[CONFIG] ema_weight=0.99, ema_start_step=200
+[CONFIG] dfake_gen_update_ratio=5
+[CONFIG] image_or_video_shape=[1, 21, 16, 60, 104]
+[CONFIG] denoising_step_list=[1000, 750, 500, 250]
+[CONFIG] num_train_timestep=1000
+[CONFIG] timestep_shift=5.0
+[CONFIG] guidance_scale=3.0
+[CONFIG] gradient_checkpointing=True
+[CONFIG] num_frame_per_block=3
+[CONFIG] denoising_loss_type=flow
+[CONFIG] sharding_strategy=hybrid_full
+[CONFIG] generator_ckpt=/iopsstor/scratch/cscs/ecetin/MemoryKrea/.cache/huggingface/hub/models--gdhe17--Self-Forcing/snapshots/2f8b779212da279d212c22a509b66ad6552f350e/checkpoints/ode_init.pt
+================================================================================
+
+[TRAINER INIT] rank=0, device=0, dtype=torch.bfloat16, is_main=True
+NCCL version 2.27.3+cuda12.9
+wandb: Currently logged in as: ecetin (erencetin) to https://api.wandb.ai. Use `wandb login --relogin` to force relogin
+wandb: WARNING Unable to create root directory 
+wandb: WARNING Falling back to temporary directory /tmp.
+wandb: Tracking run with wandb version 0.21.0
+wandb: Run data is saved locally in /tmp/wandb/run-20260405_141118-mjshxf9x
+wandb: Run `wandb offline` to turn off syncing.
+wandb: Syncing run self_forcing_dmd
+wandb: ⭐️ View project at https://wandb.ai/erencetin/self_forcing
+wandb: 🚀 View run at https://wandb.ai/erencetin/self_forcing/runs/mjshxf9x
+[TRAINER INIT] Initializing model with distribution_loss=dmd
+
+[BaseModel._initialize_models] real_model_name=Wan2.1-T2V-14B
+[BaseModel._initialize_models] fake_model_name=Wan2.1-T2V-1.3B
+[BaseModel._initialize_models] model_kwargs (generator)={'timestep_shift': 5.0}
+[BaseModel._initialize_models] Loading GENERATOR (causal=True)...
+[BaseModel._initialize_models] Generator: total_params=1,418,996,800, trainable=1,418,996,800
+[BaseModel._initialize_models] Loading REAL SCORE (causal=False, frozen)...
+[BaseModel._initialize_models] Real score: total_params=14,288,491,584, trainable=0 (frozen)
+[BaseModel._initialize_models] Loading FAKE SCORE (causal=False, trainable)...
+[BaseModel._initialize_models] Fake score: total_params=1,418,996,800, all trainable
+[BaseModel._initialize_models] Loading TEXT ENCODER (frozen)...
+[BaseModel._initialize_models] Loading VAE (frozen)...
+[BaseModel._initialize_models] Scheduler: type=FlowMatchScheduler, num_timesteps=1000, device=0
+[BaseModel._initialize_models] Scheduler timesteps range: [4.9800801277160645, 1000.0]
+[BaseModel.__init__] raw denoising_step_list (from config): [1000, 750, 500, 250]
+[BaseModel.__init__] denoising_step_list after warp_denoising_step: [1000.0, 937.5, 833.3333129882812, 625.0]
+[TRAINER INIT] Model class: DMD
+[TRAINER INIT] Setting up dataloader: i2v=False, data_path=prompts/vidprom_filtered_extended.txt.gz, batch_size=1
+DATASET SIZE 248221
+[TRAINER INIT] Dataset class: TextDataset, dataset size: 248221
+Setting up EMA with weight 0.99
+Loading pretrained generator from /iopsstor/scratch/cscs/ecetin/MemoryKrea/.cache/huggingface/hub/models--gdhe17--Self-Forcing/snapshots/2f8b779212da279d212c22a509b66ad6552f350e/checkpoints/ode_init.pt
+[CKPT] state_dict keys: ['generator']
+[CKPT] Using 'generator' sub-dict, num params: 825
+[CKPT] Generator loaded successfully
+
+[TRAIN] Starting training loop from step=0
+[TRAIN] dfake_gen_update_ratio=5 (generator updated every 5 steps)
+[TRAIN] log_iters=50, ema_start_step=200
+
+============================================================
+[TRAIN] ===== step=0 | TRAIN_GENERATOR=True =====
+============================================================
+[TRAIN step=0] === Generator update ===
+[TRAIN step=0] Got generator batch. batch keys: ['prompts', 'idx']
+
+[FWDBWD step=0] train_generator=True
+[FWDBWD step=0] batch keys: ['prompts', 'idx']
+[FWDBWD step=0] num text_prompts: 1, first prompt: 'Spider-Man, in his iconic red and blue suit, sits on a rooftop in Lisbon, Portug'
+[FWDBWD step=0] i2v=False, clean_latent=None, image_latent=None
+[FWDBWD step=0] batch_size=1, image_or_video_shape=[1, 21, 16, 60, 104]
+[FWDBWD step=0] -> shape means: [B=1, F=21, C=16, H=60, W=104]
+[FWDBWD step=0] Running text encoder...
+[FWDBWD step=0] conditional_dict keys: ['prompt_embeds']
+[FWDBWD step=0]   conditional_dict['prompt_embeds']: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16, device=cuda:0
+[FWDBWD step=0] Computing unconditional_dict for the first time...
+[FWDBWD step=0] unconditional_dict cached. Keys: ['prompt_embeds']
+[FWDBWD step=0]   unconditional_dict['prompt_embeds']: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[FWDBWD step=0] >>> GENERATOR LOSS PATH <<<
+
+[inference_with_trajectory] noise: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[inference_with_trajectory] initial_latent=None
+[inference_with_trajectory] independent_first_frame=False, num_frame_per_block=3
+[inference_with_trajectory] denoising_step_list=[1000.0, 937.5, 833.3333129882812, 625.0]
+[inference_with_trajectory] same_step_across_blocks=True, last_step_only=False
+[inference_with_trajectory] context_noise=0, kv_cache_size=32760
+[inference_with_trajectory] num_blocks=7, num_input_frames=0, num_output_frames=21
+[inference_with_trajectory] output buffer allocated: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] KV cache initialized: 30 blocks x [B=1, kv_cache_size=32760, 12 heads, 128 dim]
+[inference_with_trajectory] Cross-attn cache initialized: 30 blocks x [B=1, 512, 12 heads, 128 dim]
+[inference_with_trajectory] Temporal loop: 7 blocks, all_num_frames=[3, 3, 3, 3, 3, 3, 3]
+[inference_with_trajectory] num_denoising_steps=4, exit_flags (random step to stop at per block)=[1, 2, 0, 1, 2, 3, 1]
+[inference_with_trajectory] start_gradient_frame_index=0 (only last 21 frames get gradients)
+
+[inference_with_trajectory] === Block 0/6 | current_start_frame=0, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 0 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=True
+[inference_with_trajectory] Block 0 written to output[frames 0:3]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 3
+
+[inference_with_trajectory] === Block 1/6 | current_start_frame=3, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 3 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=True
+[inference_with_trajectory] Block 1 written to output[frames 3:6]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 6
+
+[inference_with_trajectory] === Block 2/6 | current_start_frame=6, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 6 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=True
+[inference_with_trajectory] Block 2 written to output[frames 6:9]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 9
+
+[inference_with_trajectory] === Block 3/6 | current_start_frame=9, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 9 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=True
+[inference_with_trajectory] Block 3 written to output[frames 9:12]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 12
+
+[inference_with_trajectory] === Block 4/6 | current_start_frame=12, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 12 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=True
+[inference_with_trajectory] Block 4 written to output[frames 12:15]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 15
+
+[inference_with_trajectory] === Block 5/6 | current_start_frame=15, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 15 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=True
+[inference_with_trajectory] Block 5 written to output[frames 15:18]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 18
+
+[inference_with_trajectory] === Block 6/6 | current_start_frame=18, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 18 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=True
+[inference_with_trajectory] Block 6 written to output[frames 18:21]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 21
+
+[inference_with_trajectory] DONE. output: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=True
+[inference_with_trajectory] denoised_timestep_from=750, denoised_timestep_to=500
+[inference_with_trajectory] exit_flags=[1, 2, 0, 1, 2, 3, 1] (denoising step index at which each block exited)
+[WanDiffusionWrapper.forward] model=WanModel (non-causal)
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 21]), dtype=torch.bfloat16, min=592.0, max=592.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=None, classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=True: input_timestep shape=torch.Size([1]), values=[592.0]
+[WanDiffusionWrapper.forward] PATH: standard forward (no kv_cache, no teacher forcing, no classify)
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] model=WanModel (non-causal)
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 21]), dtype=torch.bfloat16, min=592.0, max=592.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=None, classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=True: input_timestep shape=torch.Size([1]), values=[592.0]
+[WanDiffusionWrapper.forward] PATH: standard forward (no kv_cache, no teacher forcing, no classify)
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] model=WanModel (non-causal)
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 21]), dtype=torch.bfloat16, min=592.0, max=592.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=None, classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=True: input_timestep shape=torch.Size([1]), values=[592.0]
+[WanDiffusionWrapper.forward] PATH: standard forward (no kv_cache, no teacher forcing, no classify)
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+/iopsstor/scratch/cscs/ecetin/MemoryKrea/src/external/Self_Forcing/trainer/distillation.py:305: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /opt/pytorch/pytorch/aten/src/ATen/native/Scalar.cpp:22.)
+  print0(f"[FWDBWD step={self.step}] generator_loss={generator_loss.item():.6f}, dtype={generator_loss.dtype}")
+/iopsstor/scratch/cscs/ecetin/MemoryKrea/src/external/Self_Forcing/trainer/distillation.py:305: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /opt/pytorch/pytorch/aten/src/ATen/native/Scalar.cpp:22.)
+  print0(f"[FWDBWD step={self.step}] generator_loss={generator_loss.item():.6f}, dtype={generator_loss.dtype}")
+/iopsstor/scratch/cscs/ecetin/MemoryKrea/src/external/Self_Forcing/trainer/distillation.py:305: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /opt/pytorch/pytorch/aten/src/ATen/native/Scalar.cpp:22.)
+  print0(f"[FWDBWD step={self.step}] generator_loss={generator_loss.item():.6f}, dtype={generator_loss.dtype}")
+[FWDBWD step=0] generator_loss=0.094362, dtype=torch.float64
+[FWDBWD step=0] generator_log_dict keys: ['dmdtrain_gradient_norm', 'timestep']
+[FWDBWD step=0]   log['dmdtrain_gradient_norm']: shape=torch.Size([]), mean=0.324219
+[FWDBWD step=0]   log['timestep']: shape=torch.Size([1, 21]), mean=593.487427
+/iopsstor/scratch/cscs/ecetin/MemoryKrea/src/external/Self_Forcing/trainer/distillation.py:305: UserWarning: Converting a tensor with requires_grad=True to a scalar may lead to unexpected behavior.
+Consider using tensor.detach() first. (Triggered internally at /opt/pytorch/pytorch/aten/src/ATen/native/Scalar.cpp:22.)
+  print0(f"[FWDBWD step={self.step}] generator_loss={generator_loss.item():.6f}, dtype={generator_loss.dtype}")
+NCCL version 2.27.3+cuda12.9
+NCCL version 2.27.3+cuda12.9
+NCCL version 2.27.3+cuda12.9
+[FWDBWD step=0] generator_grad_norm=0.410971 (max_norm=10.0)
+[TRAIN step=0] Generator optimizer step done
+[TRAIN step=0] === Critic update ===
+[TRAIN step=0] Got critic batch. batch keys: ['prompts', 'idx']
+
+[FWDBWD step=0] train_generator=False
+[FWDBWD step=0] batch keys: ['prompts', 'idx']
+[FWDBWD step=0] num text_prompts: 1, first prompt: 'A classic 1980s action comedy scene featuring Bud Spencer and Brigitte Nielsen. '
+[FWDBWD step=0] i2v=False, clean_latent=None, image_latent=None
+[FWDBWD step=0] batch_size=1, image_or_video_shape=[1, 21, 16, 60, 104]
+[FWDBWD step=0] -> shape means: [B=1, F=21, C=16, H=60, W=104]
+[FWDBWD step=0] Running text encoder...
+[FWDBWD step=0] conditional_dict keys: ['prompt_embeds']
+[FWDBWD step=0]   conditional_dict['prompt_embeds']: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16, device=cuda:0
+[FWDBWD step=0] Using cached unconditional_dict
+[FWDBWD step=0] >>> CRITIC LOSS PATH <<<
+
+[inference_with_trajectory] noise: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[inference_with_trajectory] initial_latent=None
+[inference_with_trajectory] independent_first_frame=False, num_frame_per_block=3
+[inference_with_trajectory] denoising_step_list=[1000.0, 937.5, 833.3333129882812, 625.0]
+[inference_with_trajectory] same_step_across_blocks=True, last_step_only=False
+[inference_with_trajectory] context_noise=0, kv_cache_size=32760
+[inference_with_trajectory] num_blocks=7, num_input_frames=0, num_output_frames=21
+[inference_with_trajectory] output buffer allocated: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] KV cache initialized: 30 blocks x [B=1, kv_cache_size=32760, 12 heads, 128 dim]
+[inference_with_trajectory] Cross-attn cache initialized: 30 blocks x [B=1, 512, 12 heads, 128 dim]
+[inference_with_trajectory] Temporal loop: 7 blocks, all_num_frames=[3, 3, 3, 3, 3, 3, 3]
+[inference_with_trajectory] num_denoising_steps=4, exit_flags (random step to stop at per block)=[1, 3, 3, 0, 3, 2, 1]
+[inference_with_trajectory] start_gradient_frame_index=0 (only last 21 frames get gradients)
+
+[inference_with_trajectory] === Block 0/6 | current_start_frame=0, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 0 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 0 written to output[frames 0:3]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 3
+
+[inference_with_trajectory] === Block 1/6 | current_start_frame=3, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 3 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 1 written to output[frames 3:6]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 6
+
+[inference_with_trajectory] === Block 2/6 | current_start_frame=6, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 6 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 2 written to output[frames 6:9]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 9
+
+[inference_with_trajectory] === Block 3/6 | current_start_frame=9, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 9 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 3 written to output[frames 9:12]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 12
+
+[inference_with_trajectory] === Block 4/6 | current_start_frame=12, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 12 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 4 written to output[frames 12:15]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 15
+
+[inference_with_trajectory] === Block 5/6 | current_start_frame=15, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 15 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 5 written to output[frames 15:18]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 18
+
+[inference_with_trajectory] === Block 6/6 | current_start_frame=18, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 18 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 6 written to output[frames 18:21]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 21
+
+[inference_with_trajectory] DONE. output: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] denoised_timestep_from=750, denoised_timestep_to=500
+[inference_with_trajectory] exit_flags=[1, 3, 3, 0, 3, 2, 1] (denoising step index at which each block exited)
+[WanDiffusionWrapper.forward] model=WanModel (non-causal)
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 21]), dtype=torch.bfloat16, min=912.0, max=912.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=None, classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=True: input_timestep shape=torch.Size([1]), values=[912.0]
+[WanDiffusionWrapper.forward] PATH: standard forward (no kv_cache, no teacher forcing, no classify)
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[FWDBWD step=0] critic_loss=0.091309, dtype=torch.bfloat16
+[FWDBWD step=0] critic_log_dict keys: ['critic_timestep']
+[FWDBWD step=0]   log['critic_timestep']: shape=torch.Size([1, 21]), mean=910.326111
+[FWDBWD step=0] critic_grad_norm=1.112440 (max_norm=10.0)
+[TRAIN step=0] Critic optimizer step done
+
+============================================================
+[TRAIN] ===== step=1 | TRAIN_GENERATOR=False =====
+============================================================
+[TRAIN step=1] === Critic update ===
+[TRAIN step=1] Got critic batch. batch keys: ['prompts', 'idx']
+
+[FWDBWD step=1] train_generator=False
+[FWDBWD step=1] batch keys: ['prompts', 'idx']
+[FWDBWD step=1] num text_prompts: 1, first prompt: 'A realistic depiction of an Asian girl walking down the Yellow Brick Road, with '
+[FWDBWD step=1] i2v=False, clean_latent=None, image_latent=None
+[FWDBWD step=1] batch_size=1, image_or_video_shape=[1, 21, 16, 60, 104]
+[FWDBWD step=1] -> shape means: [B=1, F=21, C=16, H=60, W=104]
+[FWDBWD step=1] Running text encoder...
+[FWDBWD step=1] conditional_dict keys: ['prompt_embeds']
+[FWDBWD step=1]   conditional_dict['prompt_embeds']: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16, device=cuda:0
+[FWDBWD step=1] Using cached unconditional_dict
+[FWDBWD step=1] >>> CRITIC LOSS PATH <<<
+
+[inference_with_trajectory] noise: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[inference_with_trajectory] initial_latent=None
+[inference_with_trajectory] independent_first_frame=False, num_frame_per_block=3
+[inference_with_trajectory] denoising_step_list=[1000.0, 937.5, 833.3333129882812, 625.0]
+[inference_with_trajectory] same_step_across_blocks=True, last_step_only=False
+[inference_with_trajectory] context_noise=0, kv_cache_size=32760
+[inference_with_trajectory] num_blocks=7, num_input_frames=0, num_output_frames=21
+[inference_with_trajectory] output buffer allocated: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] KV cache initialized: 30 blocks x [B=1, kv_cache_size=32760, 12 heads, 128 dim]
+[inference_with_trajectory] Cross-attn cache initialized: 30 blocks x [B=1, 512, 12 heads, 128 dim]
+[inference_with_trajectory] Temporal loop: 7 blocks, all_num_frames=[3, 3, 3, 3, 3, 3, 3]
+[inference_with_trajectory] num_denoising_steps=4, exit_flags (random step to stop at per block)=[2, 3, 3, 1, 2, 1, 2]
+[inference_with_trajectory] start_gradient_frame_index=0 (only last 21 frames get gradients)
+
+[inference_with_trajectory] === Block 0/6 | current_start_frame=0, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=833.3333129882812: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 2: current_timestep=833.3333129882812, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=833.3333129882812
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 0 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=832.0, max=832.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[832.0, 832.0, 832.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 0 written to output[frames 0:3]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=0
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 3
+
+[inference_with_trajectory] === Block 1/6 | current_start_frame=3, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=833.3333129882812: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 2: current_timestep=833.3333129882812, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=833.3333129882812
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 3 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=832.0, max=832.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[832.0, 832.0, 832.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 1 written to output[frames 3:6]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=4680
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 6
+
+[inference_with_trajectory] === Block 2/6 | current_start_frame=6, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=833.3333129882812: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 2: current_timestep=833.3333129882812, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=833.3333129882812
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 6 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=832.0, max=832.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[832.0, 832.0, 832.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 2 written to output[frames 6:9]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=9360
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 9
+
+[inference_with_trajectory] === Block 3/6 | current_start_frame=9, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=833.3333129882812: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 2: current_timestep=833.3333129882812, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=833.3333129882812
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 9 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=832.0, max=832.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[832.0, 832.0, 832.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 3 written to output[frames 9:12]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=14040
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 12
+
+[inference_with_trajectory] === Block 4/6 | current_start_frame=12, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=833.3333129882812: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 2: current_timestep=833.3333129882812, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=833.3333129882812
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 12 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=832.0, max=832.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[832.0, 832.0, 832.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 4 written to output[frames 12:15]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=18720
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 15
+
+[inference_with_trajectory] === Block 5/6 | current_start_frame=15, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=833.3333129882812: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 2: current_timestep=833.3333129882812, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=833.3333129882812
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 15 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=832.0, max=832.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[832.0, 832.0, 832.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 5 written to output[frames 15:18]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=23400
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 18
+
+[inference_with_trajectory] === Block 6/6 | current_start_frame=18, current_num_frames=3 ===
+[inference_with_trajectory] noisy_input sliced: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   Denoising step 0: current_timestep=1000.0, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=1000.0
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=1000.0, max=1000.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[1000.0, 1000.0, 1000.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=937.5: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 1: current_timestep=937.5, exit_flag=False
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=937.5
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → no_grad forward (not exit step, renoising to next level)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=936.0, max=936.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[936.0, 936.0, 936.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   re-noised to next_timestep=833.3333129882812: noisy_input shape=torch.Size([1, 3, 16, 60, 104])
+[inference_with_trajectory]   Denoising step 2: current_timestep=833.3333129882812, exit_flag=True
+[inference_with_trajectory]   timestep tensor: shape=torch.Size([1, 3]), value=833.3333129882812
+[inference_with_trajectory]   noisy_input: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   → EXIT STEP (WITH GRAD, frame 18 >= gradient threshold 0)
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=832.0, max=832.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[832.0, 832.0, 832.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory]   EXIT denoised_pred: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] Block 6 written to output[frames 18:21]
+[inference_with_trajectory] Re-running with context_noise=0 to update KV cache: shape=torch.Size([1, 3, 16, 60, 104])
+[WanDiffusionWrapper.forward] model=CausalWan
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 3]), dtype=torch.bfloat16, min=0.0, max=0.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=provided (causal inference), classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape=torch.Size([1, 3]), values (first batch)=[0.0, 0.0, 0.0]
+[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start=28080
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 3, 16, 60, 104]), dtype=torch.bfloat16
+[inference_with_trajectory] current_start_frame updated to 21
+
+[inference_with_trajectory] DONE. output: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, requires_grad=False
+[inference_with_trajectory] denoised_timestep_from=500, denoised_timestep_to=250
+[inference_with_trajectory] exit_flags=[2, 3, 3, 1, 2, 1, 2] (denoising step index at which each block exited)
+[WanDiffusionWrapper.forward] model=WanModel (non-causal)
+[WanDiffusionWrapper.forward] noisy_image_or_video: shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16, device=cuda:0
+[WanDiffusionWrapper.forward] timestep: shape=torch.Size([1, 21]), dtype=torch.bfloat16, min=980.0, max=980.0
+[WanDiffusionWrapper.forward] prompt_embeds: shape=torch.Size([1, 512, 4096]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] kv_cache=None, classify_mode=False, clean_x=None
+[WanDiffusionWrapper.forward] uniform_timestep=True: input_timestep shape=torch.Size([1]), values=[980.0]
+[WanDiffusionWrapper.forward] PATH: standard forward (no kv_cache, no teacher forcing, no classify)
+[WanDiffusionWrapper.forward] flow_pred (output): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape=torch.Size([1, 21, 16, 60, 104]), dtype=torch.bfloat16
+[FWDBWD step=1] critic_loss=0.126953, dtype=torch.bfloat16
+[FWDBWD step=1] critic_log_dict keys: ['critic_timestep']
+[FWDBWD step=1]   log['critic_timestep']: shape=torch.Size([1, 21]), mean=980.000000
+[FWDBWD step=1] critic_grad_norm=0.568765 (max_norm=10.0)
+[TRAIN step=1] Critic optimizer step done

@@ -1,4 +1,4 @@
-generator_ckpt: checkpoints/ode_init.pt
+generator_ckpt: /iopsstor/scratch/cscs/ecetin/MemoryKrea/.cache/huggingface/hub/models--gdhe17--Self-Forcing/snapshots/2f8b779212da279d212c22a509b66ad6552f350e/checkpoints/ode_init.pt
 generator_fsdp_wrap_strategy: size
 real_score_fsdp_wrap_strategy: size
 fake_score_fsdp_wrap_strategy: size

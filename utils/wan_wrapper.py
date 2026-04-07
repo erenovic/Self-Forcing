@@ -9,9 +9,15 @@ from wan.modules.model import WanModel, RegisterTokens, GanAttentionBlock
 from wan.modules.vae import _video_vae
 from wan.modules.t5 import umt5_xxl
 from wan.modules.causal_model import CausalWanModel
+import torch.distributed as dist
 
-MODEL_DIR = "/cluster/scratch/ecetin/MemoryKrea/.cache/huggingface/hub/models--Wan-AI--Wan2.1-T2V-1.3B/snapshots/37ec512624d61f7aa208f7ea8140a131f93afc9a"
-MODEL_DIR_14B = "/cluster/scratch/ecetin/MemoryKrea/.cache/huggingface/hub/models--Wan-AI--Wan2.1-T2V-14B/snapshots/a064a6c71f5be440641209c07bf2a5ce7a2ff5e4"
+def print0(*args, **kwargs):
+    if not dist.is_initialized() or dist.get_rank() == 0:
+        print(*args, **kwargs)
+
+
+MODEL_DIR = "/iopsstor/scratch/cscs/ecetin/MemoryKrea/.cache/huggingface/hub/models--Wan-AI--Wan2.1-T2V-1.3B/snapshots/37ec512624d61f7aa208f7ea8140a131f93afc9a"
+MODEL_DIR_14B = "/iopsstor/scratch/cscs/ecetin/MemoryKrea/.cache/huggingface/hub/models--Wan-AI--Wan2.1-T2V-14B/snapshots/a064a6c71f5be440641209c07bf2a5ce7a2ff5e4"
 
 class WanTextEncoder(torch.nn.Module):
     def __init__(self) -> None:
@@ -235,15 +241,25 @@ class WanDiffusionWrapper(torch.nn.Module):
     ) -> torch.Tensor:
         prompt_embeds = conditional_dict["prompt_embeds"]
 
+        is_causal_model = not self.uniform_timestep
+        print0(f"[WanDiffusionWrapper.forward] model={'CausalWan' if is_causal_model else 'WanModel (non-causal)'}")
+        print0(f"[WanDiffusionWrapper.forward] noisy_image_or_video: shape={noisy_image_or_video.shape}, dtype={noisy_image_or_video.dtype}, device={noisy_image_or_video.device}")
+        print0(f"[WanDiffusionWrapper.forward] timestep: shape={timestep.shape}, dtype={timestep.dtype}, min={timestep.min().item()}, max={timestep.max().item()}")
+        print0(f"[WanDiffusionWrapper.forward] prompt_embeds: shape={prompt_embeds.shape}, dtype={prompt_embeds.dtype}")
+        print0(f"[WanDiffusionWrapper.forward] kv_cache={'provided (causal inference)' if kv_cache is not None else 'None'}, classify_mode={classify_mode}, clean_x={'provided (teacher forcing)' if clean_x is not None else 'None'}")
+
         # [B, F] -> [B]
         if self.uniform_timestep:
             input_timestep = timestep[:, 0]
+            print0(f"[WanDiffusionWrapper.forward] uniform_timestep=True: input_timestep shape={input_timestep.shape}, values={input_timestep.tolist()}")
         else:
             input_timestep = timestep
+            print0(f"[WanDiffusionWrapper.forward] uniform_timestep=False (causal): input_timestep shape={input_timestep.shape}, values (first batch)={input_timestep[0].tolist()}")
 
         logits = None
         # X0 prediction
         if kv_cache is not None:
+            print0(f"[WanDiffusionWrapper.forward] PATH: kv_cache forward (causal autoregressive inference), current_start={current_start}")
             flow_pred = self.model(
                 noisy_image_or_video.permute(0, 2, 1, 3, 4),
                 t=input_timestep, context=prompt_embeds,
@@ -256,6 +272,7 @@ class WanDiffusionWrapper(torch.nn.Module):
         else:
             if clean_x is not None:
                 # teacher forcing
+                print0(f"[WanDiffusionWrapper.forward] PATH: teacher forcing, clean_x shape={clean_x.shape}")
                 flow_pred = self.model(
                     noisy_image_or_video.permute(0, 2, 1, 3, 4),
                     t=input_timestep, context=prompt_embeds,
@@ -265,6 +282,7 @@ class WanDiffusionWrapper(torch.nn.Module):
                 ).permute(0, 2, 1, 3, 4)
             else:
                 if classify_mode:
+                    print0(f"[WanDiffusionWrapper.forward] PATH: classify_mode (GAN discriminator branch)")
                     flow_pred, logits = self.model(
                         noisy_image_or_video.permute(0, 2, 1, 3, 4),
                         t=input_timestep, context=prompt_embeds,
@@ -276,18 +294,23 @@ class WanDiffusionWrapper(torch.nn.Module):
                         concat_time_embeddings=concat_time_embeddings
                     )
                     flow_pred = flow_pred.permute(0, 2, 1, 3, 4)
+                    print0(f"[WanDiffusionWrapper.forward] logits: shape={logits.shape}, dtype={logits.dtype}")
                 else:
+                    print0(f"[WanDiffusionWrapper.forward] PATH: standard forward (no kv_cache, no teacher forcing, no classify)")
                     flow_pred = self.model(
                         noisy_image_or_video.permute(0, 2, 1, 3, 4),
                         t=input_timestep, context=prompt_embeds,
                         seq_len=self.seq_len
                     ).permute(0, 2, 1, 3, 4)
 
+        print0(f"[WanDiffusionWrapper.forward] flow_pred (output): shape={flow_pred.shape}, dtype={flow_pred.dtype}")
+
         pred_x0 = self._convert_flow_pred_to_x0(
             flow_pred=flow_pred.flatten(0, 1),
             xt=noisy_image_or_video.flatten(0, 1),
             timestep=timestep.flatten(0, 1)
         ).unflatten(0, flow_pred.shape[:2])
+        print0(f"[WanDiffusionWrapper.forward] pred_x0 (converted from flow): shape={pred_x0.shape}, dtype={pred_x0.dtype}")
 
         if logits is not None:
             return flow_pred, pred_x0, logits

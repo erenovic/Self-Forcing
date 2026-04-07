@@ -3,6 +3,12 @@ from typing import Tuple
 import torch
 
 from model.base import BaseModel
+import torch.distributed as dist
+
+def print0(*args, **kwargs):
+    if not dist.is_initialized() or dist.get_rank() == 0:
+        print(*args, **kwargs)
+
 
 
 class CausVid(BaseModel):
@@ -13,6 +19,7 @@ class CausVid(BaseModel):
         in the forward pass.
         """
         super().__init__(args, device)
+        print0(f"[CausVid INIT] device={device}, dtype={'bfloat16' if args.mixed_precision else 'float32'}")
         self.num_frame_per_block = getattr(args, "num_frame_per_block", 1)
         self.num_training_frames = getattr(args, "num_training_frames", 21)
 
@@ -30,6 +37,9 @@ class CausVid(BaseModel):
         self.num_train_timestep = args.num_train_timestep
         self.min_step = int(0.02 * self.num_train_timestep)
         self.max_step = int(0.98 * self.num_train_timestep)
+        print0(f"[CausVid INIT] num_frame_per_block={self.num_frame_per_block}, num_training_frames={self.num_training_frames}")
+        print0(f"[CausVid INIT] independent_first_frame={self.independent_first_frame}")
+        print0(f"[CausVid INIT] num_train_timestep={self.num_train_timestep}, min_step={self.min_step}, max_step={self.max_step}")
         if hasattr(args, "real_guidance_scale"):
             self.real_guidance_scale = args.real_guidance_scale
             self.fake_guidance_scale = args.fake_guidance_scale
@@ -38,6 +48,10 @@ class CausVid(BaseModel):
             self.fake_guidance_scale = 0.0
         self.timestep_shift = getattr(args, "timestep_shift", 1.0)
         self.teacher_forcing = getattr(args, "teacher_forcing", False)
+
+        print0(f"[CausVid INIT] real_guidance_scale={self.real_guidance_scale}, fake_guidance_scale={self.fake_guidance_scale}")
+        print0(f"[CausVid INIT] timestep_shift={self.timestep_shift}, teacher_forcing={self.teacher_forcing}")
+        print0(f"[CausVid INIT] denoising_step_list={getattr(args, 'denoising_step_list', 'N/A')}")
 
         if getattr(self.scheduler, "alphas_cumprod", None) is not None:
             self.scheduler.alphas_cumprod = self.scheduler.alphas_cumprod.to(device)
@@ -64,14 +78,22 @@ class CausVid(BaseModel):
             - kl_grad: a tensor representing the KL grad.
             - kl_log_dict: a dictionary containing the intermediate tensors for logging.
         """
+        print0(f"[_compute_kl_grad] noisy_image_or_video: shape={noisy_image_or_video.shape}, dtype={noisy_image_or_video.dtype}, device={noisy_image_or_video.device}")
+        print0(f"[_compute_kl_grad] estimated_clean: shape={estimated_clean_image_or_video.shape}, dtype={estimated_clean_image_or_video.dtype}")
+        print0(f"[_compute_kl_grad] timestep: shape={timestep.shape}, dtype={timestep.dtype}, min={timestep.min().item()}, max={timestep.max().item()}")
+        print0(f"[_compute_kl_grad] normalization={normalization}, fake_guidance_scale={self.fake_guidance_scale}, real_guidance_scale={self.real_guidance_scale}")
+
         # Step 1: Compute the fake score
+        print0(f"[_compute_kl_grad] Running fake_score (conditional)...")
         _, pred_fake_image_cond = self.fake_score(
             noisy_image_or_video=noisy_image_or_video,
             conditional_dict=conditional_dict,
             timestep=timestep
         )
+        print0(f"[_compute_kl_grad] pred_fake_image_cond: shape={pred_fake_image_cond.shape}, dtype={pred_fake_image_cond.dtype}")
 
         if self.fake_guidance_scale != 0.0:
+            print0(f"[_compute_kl_grad] Running fake_score (unconditional) for CFG...")
             _, pred_fake_image_uncond = self.fake_score(
                 noisy_image_or_video=noisy_image_or_video,
                 conditional_dict=unconditional_dict,
@@ -80,18 +102,21 @@ class CausVid(BaseModel):
             pred_fake_image = pred_fake_image_cond + (
                 pred_fake_image_cond - pred_fake_image_uncond
             ) * self.fake_guidance_scale
+            print0(f"[_compute_kl_grad] pred_fake_image (CFG applied): shape={pred_fake_image.shape}")
         else:
             pred_fake_image = pred_fake_image_cond
+            print0(f"[_compute_kl_grad] pred_fake_image (no CFG): shape={pred_fake_image.shape}")
 
         # Step 2: Compute the real score
-        # We compute the conditional and unconditional prediction
-        # and add them together to achieve cfg (https://arxiv.org/abs/2207.12598)
+        print0(f"[_compute_kl_grad] Running real_score (conditional)...")
         _, pred_real_image_cond = self.real_score(
             noisy_image_or_video=noisy_image_or_video,
             conditional_dict=conditional_dict,
             timestep=timestep
         )
+        print0(f"[_compute_kl_grad] pred_real_image_cond: shape={pred_real_image_cond.shape}, dtype={pred_real_image_cond.dtype}")
 
+        print0(f"[_compute_kl_grad] Running real_score (unconditional) for CFG...")
         _, pred_real_image_uncond = self.real_score(
             noisy_image_or_video=noisy_image_or_video,
             conditional_dict=unconditional_dict,
@@ -101,9 +126,11 @@ class CausVid(BaseModel):
         pred_real_image = pred_real_image_cond + (
             pred_real_image_cond - pred_real_image_uncond
         ) * self.real_guidance_scale
+        print0(f"[_compute_kl_grad] pred_real_image (CFG with scale={self.real_guidance_scale}): shape={pred_real_image.shape}")
 
         # Step 3: Compute the DMD gradient (DMD paper eq. 7).
         grad = (pred_fake_image - pred_real_image)
+        print0(f"[_compute_kl_grad] raw grad (fake - real): shape={grad.shape}, mean_abs={torch.abs(grad).mean().item():.6f}")
 
         # TODO: Change the normalizer for causal teacher
         if normalization:
@@ -111,7 +138,9 @@ class CausVid(BaseModel):
             p_real = (estimated_clean_image_or_video - pred_real_image)
             normalizer = torch.abs(p_real).mean(dim=[1, 2, 3, 4], keepdim=True)
             grad = grad / normalizer
+            print0(f"[_compute_kl_grad] normalizer: shape={normalizer.shape}, values={normalizer.squeeze().tolist()}")
         grad = torch.nan_to_num(grad)
+        print0(f"[_compute_kl_grad] final grad (after normalization+nan_to_num): mean_abs={torch.abs(grad).mean().item():.6f}")
 
         return grad, {
             "dmdtrain_gradient_norm": torch.mean(torch.abs(grad)).detach(),
@@ -139,6 +168,9 @@ class CausVid(BaseModel):
         original_latent = image_or_video
 
         batch_size, num_frame = image_or_video.shape[:2]
+        print0(f"[compute_distribution_matching_loss] image_or_video: shape={image_or_video.shape}, dtype={image_or_video.dtype}")
+        print0(f"[compute_distribution_matching_loss] batch_size={batch_size}, num_frame={num_frame}, num_frame_per_block={self.num_frame_per_block}")
+        print0(f"[compute_distribution_matching_loss] gradient_mask={'None' if gradient_mask is None else gradient_mask.shape}")
 
         with torch.no_grad():
             # Step 1: Randomly sample timestep based on the given schedule and corresponding noise
@@ -150,12 +182,15 @@ class CausVid(BaseModel):
                 self.num_frame_per_block,
                 uniform_timestep=True
             )
+            print0(f"[compute_distribution_matching_loss] sampled timestep (before shift): shape={timestep.shape}, min={timestep.min().item()}, max={timestep.max().item()}")
 
             if self.timestep_shift > 1:
                 timestep = self.timestep_shift * \
                     (timestep / 1000) / \
                     (1 + (self.timestep_shift - 1) * (timestep / 1000)) * 1000
+                print0(f"[compute_distribution_matching_loss] timestep after shift (shift={self.timestep_shift}): min={timestep.min().item():.1f}, max={timestep.max().item():.1f}")
             timestep = timestep.clamp(self.min_step, self.max_step)
+            print0(f"[compute_distribution_matching_loss] timestep after clamp [{self.min_step}, {self.max_step}]: unique values={timestep.unique().tolist()}")
 
             noise = torch.randn_like(image_or_video)
             noisy_latent = self.scheduler.add_noise(
@@ -163,6 +198,7 @@ class CausVid(BaseModel):
                 noise.flatten(0, 1),
                 timestep.flatten(0, 1)
             ).detach().unflatten(0, (batch_size, num_frame))
+            print0(f"[compute_distribution_matching_loss] noisy_latent: shape={noisy_latent.shape}, dtype={noisy_latent.dtype}")
 
             # Step 2: Compute the KL grad
             grad, dmd_log_dict = self._compute_kl_grad(
@@ -179,6 +215,7 @@ class CausVid(BaseModel):
         else:
             dmd_loss = 0.5 * F.mse_loss(original_latent.double(
             ), (original_latent.double() - grad.double()).detach(), reduction="mean")
+        print0(f"[compute_distribution_matching_loss] dmd_loss={dmd_loss.item():.6f} (reduction='mean', gradient_mask={'applied' if gradient_mask is not None else 'none'})")
         return dmd_loss, dmd_log_dict
 
     def _run_generator(
@@ -199,8 +236,13 @@ class CausVid(BaseModel):
         Output:
             - pred_image: a tensor with shape [B, F, C, H, W].
         """
+        print0(f"[_run_generator (CausVid)] image_or_video_shape={image_or_video_shape}")
+        print0(f"[_run_generator (CausVid)] clean_latent: shape={clean_latent.shape}, dtype={clean_latent.dtype}")
+        print0(f"[_run_generator (CausVid)] denoising_step_list={self.denoising_step_list.tolist()}")
+        print0(f"[_run_generator (CausVid)] teacher_forcing={self.teacher_forcing}")
+
         simulated_noisy_input = []
-        for timestep in self.denoising_step_list:
+        for ts_idx, timestep in enumerate(self.denoising_step_list):
             noise = torch.randn(
                 image_or_video_shape, device=self.device, dtype=self.dtype)
 
@@ -217,8 +259,11 @@ class CausVid(BaseModel):
                 noisy_image = clean_latent
 
             simulated_noisy_input.append(noisy_image)
+            print0(f"[_run_generator (CausVid)] backward sim step {ts_idx}: timestep={timestep.item()}, noisy_image shape={noisy_image.shape}, dtype={noisy_image.dtype}")
 
         simulated_noisy_input = torch.stack(simulated_noisy_input, dim=1)
+        print0(f"[_run_generator (CausVid)] simulated_noisy_input stacked: shape={simulated_noisy_input.shape}")
+        # shape is [B, num_denoising_steps, F, C, H, W]
 
         # Step 2: Randomly sample a timestep and pick the corresponding input
         index = self._get_timestep(
@@ -229,6 +274,7 @@ class CausVid(BaseModel):
             self.num_frame_per_block,
             uniform_timestep=False
         )
+        print0(f"[_run_generator (CausVid)] sampled index into denoising_step_list: shape={index.shape}, values={index.tolist()}")
 
         # select the corresponding timestep's noisy input from the stacked tensor [B, T, F, C, H, W]
         noisy_input = torch.gather(
@@ -236,19 +282,24 @@ class CausVid(BaseModel):
             index=index.reshape(index.shape[0], 1, index.shape[1], 1, 1, 1).expand(
                 -1, -1, -1, *image_or_video_shape[2:]).to(self.device)
         ).squeeze(1)
+        print0(f"[_run_generator (CausVid)] selected noisy_input: shape={noisy_input.shape}, dtype={noisy_input.dtype}")
 
         timestep = self.denoising_step_list[index].to(self.device)
+        print0(f"[_run_generator (CausVid)] selected timestep: shape={timestep.shape}, values={timestep.tolist()}")
 
+        print0(f"[_run_generator (CausVid)] Running generator forward pass (causal model)...")
         _, pred_image_or_video = self.generator(
             noisy_image_or_video=noisy_input,
             conditional_dict=conditional_dict,
             timestep=timestep,
             clean_x=clean_latent if self.teacher_forcing else None,
         )
+        print0(f"[_run_generator (CausVid)] pred_image_or_video: shape={pred_image_or_video.shape}, dtype={pred_image_or_video.dtype}")
 
         gradient_mask = None  # timestep != 0
 
         pred_image_or_video = pred_image_or_video.type_as(noisy_input)
+        print0(f"[_run_generator (CausVid)] pred_image_or_video (type_as noisy_input): dtype={pred_image_or_video.dtype}")
 
         return pred_image_or_video, gradient_mask
 
@@ -274,12 +325,18 @@ class CausVid(BaseModel):
             - loss: a scalar tensor representing the generator loss.
             - generator_log_dict: a dictionary containing the intermediate tensors for logging.
         """
+        print0(f"\n[generator_loss] image_or_video_shape={image_or_video_shape}")
+        print0(f"[generator_loss] clean_latent={'None' if clean_latent is None else f'shape={clean_latent.shape}, dtype={clean_latent.dtype}'}")
+        print0(f"[generator_loss] initial_latent={'None' if initial_latent is None else f'shape={initial_latent.shape}'}")
+
         # Step 1: Run generator on backward simulated noisy input
         pred_image, gradient_mask = self._run_generator(
             image_or_video_shape=image_or_video_shape,
             conditional_dict=conditional_dict,
             clean_latent=clean_latent
         )
+        print0(f"[generator_loss] pred_image from _run_generator: shape={pred_image.shape}, dtype={pred_image.dtype}")
+        print0(f"[generator_loss] gradient_mask={'None' if gradient_mask is None else f'shape={gradient_mask.shape}'}")
 
         # Step 2: Compute the DMD loss
         dmd_loss, dmd_log_dict = self.compute_distribution_matching_loss(
@@ -288,6 +345,7 @@ class CausVid(BaseModel):
             unconditional_dict=unconditional_dict,
             gradient_mask=gradient_mask
         )
+        print0(f"[generator_loss] dmd_loss={dmd_loss.item():.6f}")
 
         # Step 3: TODO: Implement the GAN loss
 
@@ -316,6 +374,10 @@ class CausVid(BaseModel):
             - critic_log_dict: a dictionary containing the intermediate tensors for logging.
         """
 
+        print0(f"\n[critic_loss] image_or_video_shape={image_or_video_shape}")
+        print0(f"[critic_loss] clean_latent={'None' if clean_latent is None else f'shape={clean_latent.shape}, dtype={clean_latent.dtype}'}")
+        print0(f"[critic_loss] denoising_loss_type={self.args.denoising_loss_type}")
+
         # Step 1: Run generator on backward simulated noisy input
         with torch.no_grad():
             generated_image, _ = self._run_generator(
@@ -323,6 +385,7 @@ class CausVid(BaseModel):
                 conditional_dict=conditional_dict,
                 clean_latent=clean_latent
             )
+        print0(f"[critic_loss] generated_image (from generator, no_grad): shape={generated_image.shape}, dtype={generated_image.dtype}")
 
         # Step 2: Compute the fake prediction
         critic_timestep = self._get_timestep(
@@ -333,12 +396,15 @@ class CausVid(BaseModel):
             self.num_frame_per_block,
             uniform_timestep=True
         )
+        print0(f"[critic_loss] critic_timestep (before shift/clamp): shape={critic_timestep.shape}, min={critic_timestep.min().item()}, max={critic_timestep.max().item()}")
 
         if self.timestep_shift > 1:
             critic_timestep = self.timestep_shift * \
                 (critic_timestep / 1000) / (1 + (self.timestep_shift - 1) * (critic_timestep / 1000)) * 1000
+            print0(f"[critic_loss] critic_timestep after shift (shift={self.timestep_shift}): min={critic_timestep.min().item():.1f}, max={critic_timestep.max().item():.1f}")
 
         critic_timestep = critic_timestep.clamp(self.min_step, self.max_step)
+        print0(f"[critic_loss] critic_timestep after clamp [{self.min_step}, {self.max_step}]: unique={critic_timestep.unique().tolist()}")
 
         critic_noise = torch.randn_like(generated_image)
         noisy_generated_image = self.scheduler.add_noise(
@@ -346,14 +412,18 @@ class CausVid(BaseModel):
             critic_noise.flatten(0, 1),
             critic_timestep.flatten(0, 1)
         ).unflatten(0, image_or_video_shape[:2])
+        print0(f"[critic_loss] noisy_generated_image: shape={noisy_generated_image.shape}, dtype={noisy_generated_image.dtype}")
 
+        print0(f"[critic_loss] Running fake_score (critic/denoiser) forward pass...")
         _, pred_fake_image = self.fake_score(
             noisy_image_or_video=noisy_generated_image,
             conditional_dict=conditional_dict,
             timestep=critic_timestep
         )
+        print0(f"[critic_loss] pred_fake_image: shape={pred_fake_image.shape}, dtype={pred_fake_image.dtype}")
 
         # Step 3: Compute the denoising loss for the fake critic
+        print0(f"[critic_loss] Computing denoising loss (type={self.args.denoising_loss_type})...")
         if self.args.denoising_loss_type == "flow":
             from utils.wan_wrapper import WanDiffusionWrapper
             flow_pred = WanDiffusionWrapper._convert_x0_to_flow_pred(
@@ -380,6 +450,7 @@ class CausVid(BaseModel):
             timestep=critic_timestep.flatten(0, 1),
             flow_pred=flow_pred
         )
+        print0(f"[critic_loss] denoising_loss={denoising_loss.item():.6f}")
 
         # Step 4: TODO: Compute the GAN loss
 

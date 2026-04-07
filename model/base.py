@@ -9,6 +9,11 @@ from utils.loss import get_denoising_loss
 from utils.wan_wrapper import WanDiffusionWrapper, WanTextEncoder, WanVAEWrapper
 
 
+def print0(*args, **kwargs):
+    if not dist.is_initialized() or dist.get_rank() == 0:
+        print(*args, **kwargs)
+
+
 class BaseModel(nn.Module):
     def __init__(self, args, device):
         super().__init__()
@@ -19,31 +24,51 @@ class BaseModel(nn.Module):
         self.dtype = torch.bfloat16 if args.mixed_precision else torch.float32
         if hasattr(args, "denoising_step_list"):
             self.denoising_step_list = torch.tensor(args.denoising_step_list, dtype=torch.long)
+            print0(f"[BaseModel.__init__] raw denoising_step_list (from config): {self.denoising_step_list.tolist()}")
             if args.warp_denoising_step:
                 timesteps = torch.cat((self.scheduler.timesteps.cpu(), torch.tensor([0], dtype=torch.float32)))
                 self.denoising_step_list = timesteps[1000 - self.denoising_step_list]
+                print0(f"[BaseModel.__init__] denoising_step_list after warp_denoising_step: {self.denoising_step_list.tolist()}")
 
     def _initialize_models(self, args, device):
         self.real_model_name = getattr(args, "real_name", "Wan2.1-T2V-1.3B")
         self.fake_model_name = getattr(args, "fake_name", "Wan2.1-T2V-1.3B")
+        model_kwargs = getattr(args, "model_kwargs", {})
+        print0(f"\n[BaseModel._initialize_models] real_model_name={self.real_model_name}")
+        print0(f"[BaseModel._initialize_models] fake_model_name={self.fake_model_name}")
+        print0(f"[BaseModel._initialize_models] model_kwargs (generator)={dict(model_kwargs)}")
 
-        self.generator = WanDiffusionWrapper(**getattr(args, "model_kwargs", {}), is_causal=True)
+        print0(f"[BaseModel._initialize_models] Loading GENERATOR (causal=True)...")
+        self.generator = WanDiffusionWrapper(**model_kwargs, is_causal=True)
         self.generator.model.requires_grad_(True)
+        gen_params = sum(p.numel() for p in self.generator.parameters())
+        gen_trainable = sum(p.numel() for p in self.generator.parameters() if p.requires_grad)
+        print0(f"[BaseModel._initialize_models] Generator: total_params={gen_params:,}, trainable={gen_trainable:,}")
 
+        print0(f"[BaseModel._initialize_models] Loading REAL SCORE (causal=False, frozen)...")
         self.real_score = WanDiffusionWrapper(model_name=self.real_model_name, is_causal=False)
         self.real_score.model.requires_grad_(False)
+        real_params = sum(p.numel() for p in self.real_score.parameters())
+        print0(f"[BaseModel._initialize_models] Real score: total_params={real_params:,}, trainable=0 (frozen)")
 
+        print0(f"[BaseModel._initialize_models] Loading FAKE SCORE (causal=False, trainable)...")
         self.fake_score = WanDiffusionWrapper(model_name=self.fake_model_name, is_causal=False)
         self.fake_score.model.requires_grad_(True)
+        fake_params = sum(p.numel() for p in self.fake_score.parameters())
+        print0(f"[BaseModel._initialize_models] Fake score: total_params={fake_params:,}, all trainable")
 
+        print0(f"[BaseModel._initialize_models] Loading TEXT ENCODER (frozen)...")
         self.text_encoder = WanTextEncoder()
         self.text_encoder.requires_grad_(False)
 
+        print0(f"[BaseModel._initialize_models] Loading VAE (frozen)...")
         self.vae = WanVAEWrapper()
         self.vae.requires_grad_(False)
 
         self.scheduler = self.generator.get_scheduler()
         self.scheduler.timesteps = self.scheduler.timesteps.to(device)
+        print0(f"[BaseModel._initialize_models] Scheduler: type={type(self.scheduler).__name__}, num_timesteps={len(self.scheduler.timesteps)}, device={device}")
+        print0(f"[BaseModel._initialize_models] Scheduler timesteps range: [{self.scheduler.timesteps.min().item()}, {self.scheduler.timesteps.max().item()}]")
 
     def _get_timestep(
             self,

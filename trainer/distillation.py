@@ -17,6 +17,11 @@ import time
 import os
 
 
+def print0(*args, **kwargs):
+    if not dist.is_initialized() or dist.get_rank() == 0:
+        print(*args, **kwargs)
+
+
 class Trainer:
     def __init__(self, config):
         self.config = config
@@ -30,11 +35,31 @@ class Trainer:
         global_rank = dist.get_rank()
         self.world_size = dist.get_world_size()
 
+        print0(f"\n{'='*80}")
+        print0(f"[DISTILLATION TRAINER INIT] rank={global_rank}, world_size={self.world_size}")
+        print0(f"[CONFIG] trainer={config.trainer}, distribution_loss={config.distribution_loss}")
+        print0(f"[CONFIG] mixed_precision={config.mixed_precision}, seed={config.seed}")
+        print0(f"[CONFIG] batch_size={config.batch_size}, lr={config.lr}, lr_critic={getattr(config, 'lr_critic', config.lr)}")
+        print0(f"[CONFIG] ema_weight={config.ema_weight}, ema_start_step={config.ema_start_step}")
+        print0(f"[CONFIG] dfake_gen_update_ratio={config.dfake_gen_update_ratio}")
+        print0(f"[CONFIG] image_or_video_shape={list(config.image_or_video_shape)}")
+        print0(f"[CONFIG] denoising_step_list={getattr(config, 'denoising_step_list', 'N/A')}")
+        print0(f"[CONFIG] num_train_timestep={getattr(config, 'num_train_timestep', 'N/A')}")
+        print0(f"[CONFIG] timestep_shift={getattr(config, 'timestep_shift', 'N/A')}")
+        print0(f"[CONFIG] guidance_scale={getattr(config, 'guidance_scale', 'N/A')}")
+        print0(f"[CONFIG] gradient_checkpointing={getattr(config, 'gradient_checkpointing', 'N/A')}")
+        print0(f"[CONFIG] num_frame_per_block={getattr(config, 'num_frame_per_block', 'N/A')}")
+        print0(f"[CONFIG] denoising_loss_type={getattr(config, 'denoising_loss_type', 'N/A')}")
+        print0(f"[CONFIG] sharding_strategy={config.sharding_strategy}")
+        print0(f"[CONFIG] generator_ckpt={getattr(config, 'generator_ckpt', None)}")
+        print0(f"{'='*80}\n")
+
         self.dtype = torch.bfloat16 if config.mixed_precision else torch.float32
         self.device = torch.cuda.current_device()
         self.is_main_process = global_rank == 0
         self.causal = config.causal
         self.disable_wandb = config.disable_wandb
+        print0(f"[TRAINER INIT] rank={global_rank}, device={self.device}, dtype={self.dtype}, is_main={self.is_main_process}")
 
         # use a random seed for the training
         if config.seed == 0:
@@ -58,6 +83,7 @@ class Trainer:
         self.output_path = config.logdir
 
         # Step 2: Initialize the model and optimizer
+        print0(f"[TRAINER INIT] Initializing model with distribution_loss={config.distribution_loss}")
         if config.distribution_loss == "causvid":
             self.model = CausVid(config, device=self.device)
         elif config.distribution_loss == "dmd":
@@ -66,6 +92,7 @@ class Trainer:
             self.model = SiD(config, device=self.device)
         else:
             raise ValueError("Invalid distribution matching loss")
+        print0(f"[TRAINER INIT] Model class: {type(self.model).__name__}")
 
         # Save pretrained model state_dicts to CPU
         self.fake_score_state_dict_cpu = self.model.fake_score.state_dict()
@@ -120,6 +147,7 @@ class Trainer:
         )
 
         # Step 3: Initialize the dataloader
+        print0(f"[TRAINER INIT] Setting up dataloader: i2v={config.i2v}, data_path={config.data_path}, batch_size={config.batch_size}")
         if self.config.i2v:
             dataset = ShardingLMDBDataset(config.data_path, max_pair=int(1e8))
         else:
@@ -133,8 +161,9 @@ class Trainer:
             num_workers=8)
 
         if dist.get_rank() == 0:
-            print("DATASET SIZE %d" % len(dataset))
+            print0("DATASET SIZE %d" % len(dataset))
         self.dataloader = cycle(dataloader)
+        print0(f"[TRAINER INIT] Dataset class: {type(dataset).__name__}, dataset size: {len(dataset)}")
 
         ##############################################################################################################
         # 6. Set up EMA parameter containers
@@ -153,21 +182,25 @@ class Trainer:
         ema_weight = config.ema_weight
         self.generator_ema = None
         if (ema_weight is not None) and (ema_weight > 0.0):
-            print(f"Setting up EMA with weight {ema_weight}")
+            print0(f"Setting up EMA with weight {ema_weight}")
             self.generator_ema = EMA_FSDP(self.model.generator, decay=ema_weight)
 
         ##############################################################################################################
         # 7. (If resuming) Load the model and optimizer, lr_scheduler, ema's statedicts
         if getattr(config, "generator_ckpt", False):
-            print(f"Loading pretrained generator from {config.generator_ckpt}")
+            print0(f"Loading pretrained generator from {config.generator_ckpt}")
             state_dict = torch.load(config.generator_ckpt, map_location="cpu")
+            print0(f"[CKPT] state_dict keys: {list(state_dict.keys())}")
             if "generator" in state_dict:
                 state_dict = state_dict["generator"]
+                print0(f"[CKPT] Using 'generator' sub-dict, num params: {len(state_dict)}")
             elif "model" in state_dict:
                 state_dict = state_dict["model"]
+                print0(f"[CKPT] Using 'model' sub-dict, num params: {len(state_dict)}")
             self.model.generator.load_state_dict(
                 state_dict, strict=True
             )
+            print0(f"[CKPT] Generator loaded successfully")
 
         ##############################################################################################################
 
@@ -180,7 +213,7 @@ class Trainer:
         self.previous_time = None
 
     def save(self):
-        print("Start gathering distributed model states...")
+        print0("Start gathering distributed model states...")
         generator_state_dict = fsdp_state_dict(
             self.model.generator)
         critic_state_dict = fsdp_state_dict(
@@ -203,7 +236,7 @@ class Trainer:
                         f"checkpoint_model_{self.step:06d}"), exist_ok=True)
             torch.save(state_dict, os.path.join(self.output_path,
                        f"checkpoint_model_{self.step:06d}", "model.pt"))
-            print("Model saved to", os.path.join(self.output_path,
+            print0("Model saved to", os.path.join(self.output_path,
                   f"checkpoint_model_{self.step:06d}", "model.pt"))
 
     def fwdbwd_one_step(self, batch, train_generator):
@@ -212,36 +245,55 @@ class Trainer:
         if self.step % 20 == 0:
             torch.cuda.empty_cache()
 
+        print0(f"\n[FWDBWD step={self.step}] train_generator={train_generator}")
+
         # Step 1: Get the next batch of text prompts
         text_prompts = batch["prompts"]
+        print0(f"[FWDBWD step={self.step}] batch keys: {list(batch.keys())}")
+        print0(f"[FWDBWD step={self.step}] num text_prompts: {len(text_prompts)}, first prompt: '{text_prompts[0][:80]}'")
+
         if self.config.i2v:
             clean_latent = None
             image_latent = batch["ode_latent"][:, -1][:, 0:1, ].to(
                 device=self.device, dtype=self.dtype)
+            print0(f"[FWDBWD step={self.step}] i2v=True, image_latent shape={image_latent.shape}, dtype={image_latent.dtype}")
         else:
             clean_latent = None
             image_latent = None
+            print0(f"[FWDBWD step={self.step}] i2v=False, clean_latent=None, image_latent=None")
 
         batch_size = len(text_prompts)
         image_or_video_shape = list(self.config.image_or_video_shape)
         image_or_video_shape[0] = batch_size
+        print0(f"[FWDBWD step={self.step}] batch_size={batch_size}, image_or_video_shape={image_or_video_shape}")
+        print0(f"[FWDBWD step={self.step}] -> shape means: [B={image_or_video_shape[0]}, F={image_or_video_shape[1]}, C={image_or_video_shape[2]}, H={image_or_video_shape[3]}, W={image_or_video_shape[4]}]")
 
         # Step 2: Extract the conditional infos
+        print0(f"[FWDBWD step={self.step}] Running text encoder...")
         with torch.no_grad():
             conditional_dict = self.model.text_encoder(
                 text_prompts=text_prompts)
+            print0(f"[FWDBWD step={self.step}] conditional_dict keys: {list(conditional_dict.keys())}")
+            for k, v in conditional_dict.items():
+                print0(f"[FWDBWD step={self.step}]   conditional_dict['{k}']: shape={v.shape}, dtype={v.dtype}, device={v.device}")
 
             if not getattr(self, "unconditional_dict", None):
+                print0(f"[FWDBWD step={self.step}] Computing unconditional_dict for the first time...")
                 unconditional_dict = self.model.text_encoder(
                     text_prompts=[self.config.negative_prompt] * batch_size)
                 unconditional_dict = {k: v.detach()
                                       for k, v in unconditional_dict.items()}
                 self.unconditional_dict = unconditional_dict  # cache the unconditional_dict
+                print0(f"[FWDBWD step={self.step}] unconditional_dict cached. Keys: {list(unconditional_dict.keys())}")
+                for k, v in unconditional_dict.items():
+                    print0(f"[FWDBWD step={self.step}]   unconditional_dict['{k}']: shape={v.shape}, dtype={v.dtype}")
             else:
                 unconditional_dict = self.unconditional_dict
+                print0(f"[FWDBWD step={self.step}] Using cached unconditional_dict")
 
         # Step 3: Store gradients for the generator (if training the generator)
         if train_generator:
+            print0(f"[FWDBWD step={self.step}] >>> GENERATOR LOSS PATH <<<")
             generator_loss, generator_log_dict = self.model.generator_loss(
                 image_or_video_shape=image_or_video_shape,
                 conditional_dict=conditional_dict,
@@ -250,9 +302,19 @@ class Trainer:
                 initial_latent=image_latent if self.config.i2v else None
             )
 
+            print0(f"[FWDBWD step={self.step}] generator_loss={generator_loss.item():.6f}, dtype={generator_loss.dtype}")
+            print0(f"[FWDBWD step={self.step}] generator_log_dict keys: {list(generator_log_dict.keys())}")
+            for k, v in generator_log_dict.items():
+                if hasattr(v, 'shape'):
+                    print0(f"[FWDBWD step={self.step}]   log['{k}']: shape={v.shape}, mean={v.float().mean().item():.6f}")
+                else:
+                    print0(f"[FWDBWD step={self.step}]   log['{k}']: {v}")
+
             generator_loss.backward()
             generator_grad_norm = self.model.generator.clip_grad_norm_(
                 self.max_grad_norm_generator)
+
+            print0(f"[FWDBWD step={self.step}] generator_grad_norm={generator_grad_norm.item():.6f} (max_norm={self.max_grad_norm_generator})")
 
             generator_log_dict.update({"generator_loss": generator_loss,
                                        "generator_grad_norm": generator_grad_norm})
@@ -262,6 +324,7 @@ class Trainer:
             generator_log_dict = {}
 
         # Step 4: Store gradients for the critic (if training the critic)
+        print0(f"[FWDBWD step={self.step}] >>> CRITIC LOSS PATH <<<")
         critic_loss, critic_log_dict = self.model.critic_loss(
             image_or_video_shape=image_or_video_shape,
             conditional_dict=conditional_dict,
@@ -270,9 +333,19 @@ class Trainer:
             initial_latent=image_latent if self.config.i2v else None
         )
 
+        print0(f"[FWDBWD step={self.step}] critic_loss={critic_loss.item():.6f}, dtype={critic_loss.dtype}")
+        print0(f"[FWDBWD step={self.step}] critic_log_dict keys: {list(critic_log_dict.keys())}")
+        for k, v in critic_log_dict.items():
+            if hasattr(v, 'shape'):
+                print0(f"[FWDBWD step={self.step}]   log['{k}']: shape={v.shape}, mean={v.float().mean().item():.6f}")
+            else:
+                print0(f"[FWDBWD step={self.step}]   log['{k}']: {v}")
+
         critic_loss.backward()
         critic_grad_norm = self.model.fake_score.clip_grad_norm_(
             self.max_grad_norm_critic)
+
+        print0(f"[FWDBWD step={self.step}] critic_grad_norm={critic_grad_norm.item():.6f} (max_norm={self.max_grad_norm_critic})")
 
         critic_log_dict.update({"critic_loss": critic_loss,
                                 "critic_grad_norm": critic_grad_norm})
@@ -311,30 +384,43 @@ class Trainer:
 
     def train(self):
         start_step = self.step
+        print0(f"\n[TRAIN] Starting training loop from step={start_step}")
+        print0(f"[TRAIN] dfake_gen_update_ratio={self.config.dfake_gen_update_ratio} (generator updated every {self.config.dfake_gen_update_ratio} steps)")
+        print0(f"[TRAIN] log_iters={self.config.log_iters}, ema_start_step={self.config.ema_start_step}")
 
         while True:
             TRAIN_GENERATOR = self.step % self.config.dfake_gen_update_ratio == 0
+            print0(f"\n{'='*60}")
+            print0(f"[TRAIN] ===== step={self.step} | TRAIN_GENERATOR={TRAIN_GENERATOR} =====")
+            print0(f"{'='*60}")
 
             # Train the generator
             if TRAIN_GENERATOR:
+                print0(f"[TRAIN step={self.step}] === Generator update ===")
                 self.generator_optimizer.zero_grad(set_to_none=True)
                 extras_list = []
                 batch = next(self.dataloader)
+                print0(f"[TRAIN step={self.step}] Got generator batch. batch keys: {list(batch.keys())}")
                 extra = self.fwdbwd_one_step(batch, True)
                 extras_list.append(extra)
                 generator_log_dict = merge_dict_list(extras_list)
                 self.generator_optimizer.step()
+                print0(f"[TRAIN step={self.step}] Generator optimizer step done")
                 if self.generator_ema is not None:
                     self.generator_ema.update(self.model.generator)
+                    print0(f"[TRAIN step={self.step}] EMA updated (decay={self.config.ema_weight})")
 
             # Train the critic
+            print0(f"[TRAIN step={self.step}] === Critic update ===")
             self.critic_optimizer.zero_grad(set_to_none=True)
             extras_list = []
             batch = next(self.dataloader)
+            print0(f"[TRAIN step={self.step}] Got critic batch. batch keys: {list(batch.keys())}")
             extra = self.fwdbwd_one_step(batch, False)
             extras_list.append(extra)
             critic_log_dict = merge_dict_list(extras_list)
             self.critic_optimizer.step()
+            print0(f"[TRAIN step={self.step}] Critic optimizer step done")
 
             # Increment the step since we finished gradient update
             self.step += 1
@@ -343,6 +429,7 @@ class Trainer:
             if (self.step >= self.config.ema_start_step) and \
                     (self.generator_ema is None) and (self.config.ema_weight > 0):
                 self.generator_ema = EMA_FSDP(self.model.generator, decay=self.config.ema_weight)
+                print0(f"[TRAIN step={self.step}] EMA created at step {self.step} with decay={self.config.ema_weight}")
 
             # Save the model
             if (not self.config.no_save) and (self.step - start_step) > 0 and self.step % self.config.log_iters == 0:
